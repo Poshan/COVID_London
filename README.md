@@ -22,11 +22,12 @@ There were missing datasets for the City of London (MSOA code: E02000001), So it
 
 `ons-des-prod-mobility-outenc-ingress_encrypt_estODMatrix_msoa_MidPandemic_df.csv` is the origin destination matrix showing the number of commutes between the MSOAs during the COVID-19 period. The source of datasets is the [Office of National Statistics, UK](https://www.ons.gov.uk/releases/estimationoftraveltoworkmatricesenglandandwales)
 
-**other_data: **
+**other_data:**
 
 `population_centers_london.shp` is the shapefile containing the residential places and their population. **not used in this analysis**
 
 `population_estimate_2020.csv` is the estimated population of MSOAs prepared by [Office of national statistics](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/middlesuperoutputareamidyearpopulationestimates) 
+
 
 **processed_data:**
 
@@ -39,7 +40,22 @@ This folder contains the pre-processed datasets.
 
 `distinct_LONLAT.parquet` is a dataframe containing all the distinct locations where the mapbox activity data are availalble in the study area during the year 2020. See [Preprocessing](R/01_Preprocessing_Duplicate_removal.R)
 
-`london_df_mobilitylaggedactivity.parquet` is created when the origin destination matrix (explained above) is combined with the mean activity within MSOAs. See [R code creating mobility factor](R/07_Modelling_create_MobilityFactor.R)
+`london_df_mobilitylaggedactivity.parquet` is created when the origin destination matrix (explained above) is combined with the mean activity within MSOAs. See [R code creating mobility factor](R/07_Modelling_create_MobilityFactor.R). This dataframe is used in the models, so the data description is shown below:
+
+- *areaCode*: unique ID of each MSOA
+- *date*: weekly dates
+- *weekly_mean_activity*: aggregated mean activity for the week 
+- *week*: week number 
+- *weekly_cases*: weekly COVID-19 cases reported
+- *caserate*: weekly_cases per 100000 population in the MSOA
+- *Population*: population estimate of the MSOA for the year 2020
+- *wave*: COVID-19 waves and its events (depicting the decisions made during the period)
+- *weekly_mean_activity_lag1*: *weekly_mean_activity* one week prior
+- *weekly_mean_activity_lag2*: *weekly_mean_activity* two weeks prior
+- *MobilityLag*: *weekly_mean_activity* which is combined with the neighbors and their weights from the OD matrices
+- *MobilityLag_weeklag_1*: *weekly_mean_activity_lag1* combined with the neighbors and their weights from the OD matrices
+- *MobilityLag_weeklag_2*: *weekly_mean_activity_lag2* combined with the neighbors and their weights from the OD matrices
+
 
 `origin_destination_matrix.parquet` is the processed origin destination matrix dataset (explained above). See [Preprocessing of OD matrices](R/04_Preprocessing_OD_matrices.R)
 
@@ -68,3 +84,4 @@ The code are structured in the way below:
 `08_Modelling_INLA_models.R` models based on the prepared data and graphs using R-INLA packages and plots the summary results.
 
 
+## Libraries used

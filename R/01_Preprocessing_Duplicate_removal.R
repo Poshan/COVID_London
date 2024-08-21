@@ -1,7 +1,7 @@
 library(sf)
 library(dplyr)
 library(arrow)
-library(sf)
+
 # Duplicate removal ------------------------------------------------------------
 ## Load data -------------------------------------------------------------------
 

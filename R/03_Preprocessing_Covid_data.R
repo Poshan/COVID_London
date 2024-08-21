@@ -68,7 +68,7 @@ weekly_final_data$weekly_cases <- weekly_final_data$cases
 
 df_population_estimate <- read.csv('England/data/other_data/population_estimate_2020.csv')
 ##remove , on the population number
-df_population_estimate <- df_population_estimate %>% 
+df_population_estimate <- df_population_estimate |> 
   mutate_all(~gsub(",", "", .))
 
 ##select only required columns
@@ -79,13 +79,13 @@ df_population_estimate |> select(any_of(c("areaCode", "All.Ages"))) -> df_popula
 ### compute caserate ------
 ##join the weekly final data with the population estimate
 weekly_final_data |> 
-  left_join(df_population_estimate, by = c("areaCode")) -> 
+  inner_join(df_population_estimate, by = c("areaCode")) -> 
   weekly_final_data
 
 
 ###caserate computation
 weekly_final_data |> mutate(caserate=100000*weekly_cases/All.Ages) -> weekly_final_data
-
+weekly_final_data$Population <- weekly_final_data$All.Ages
 weekly_final_data$weekly_mean_activity <- weekly_final_data$weekly_mean
 
 weekly_final_data |> 
@@ -115,6 +115,6 @@ london_df |> fuzzy_left_join(waves.df,
                              by=c("date" = "start_date", "date" = "end_date"),
                              match_fun = c(`>=`, `<`)) -> london_df
 
-
+london_df |> select(-"start_date", -"end_date") -> london_df
 
 write_parquet(london_df, "England/data/processed_data/london_weekly_data_with_caserate.parquet")

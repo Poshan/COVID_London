@@ -2,8 +2,6 @@
 library(sf)
 library(dplyr)
 library(tidyr)
-library(spacetime)
-library(sp)
 library(arrow)
 library(spdep)
 
