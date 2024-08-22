@@ -1,12 +1,5 @@
-library(sf)
-library(dplyr)
-library(tidyr)
-library(spdep)
-library(arrow)
-
-
 ##run 06_Modeling_create_graph.R before running this R file
-
+source("England/R/06_Modeling_create_graph.R")
 ## Create mobility factor from Mobility graph and weekly_mean_activity -----
 
 ### read the neighborhood file --------
@@ -50,8 +43,5 @@ london_df$MobilityLag_weeklag_2 <- k_m%*%london_df$weekly_mean_activity_lag2
 
 ##save teh mobility_lag_df
 write_parquet(london_df, "England/data/processed_data/london_df_mobilitylaggedactivity.parquet")
-
-
-
 
 

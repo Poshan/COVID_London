@@ -136,6 +136,6 @@ weights_matrix <- nb2mat(neighbors_list_i, glist = weights_list_i, style = "W", 
 
 mobility_graph_wt <- inla.read.graph(weights_matrix)
 
-plot(mobility_graph_wt)
+# plot(mobility_graph_wt)
 
 
