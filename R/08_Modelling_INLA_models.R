@@ -100,11 +100,14 @@ f <- c(f0, f1, f2, f7)
 inla_runs <- lapply(f, inlaModels)
 
 
+
 ## Model evaluations -------
 
 #### Residuals and Residual plots ----------------------
 summary(inla_runs[[1]]$result$residue)
+
 plot(inla_runs[[1]]$result$residue)
+
 
 summary(inla_runs[[2]]$result$residue)
 plot(inla_runs[[2]]$result$residue)
@@ -121,10 +124,18 @@ summary(inla_runs[[3]]$model)
 summary(inla_runs[[4]]$model)
 
 #### CPO ------------------
-cpo1 <- sum(log(inla_runs[[1]]$model$cpo$cpo), na.rm = TRUE)
-cpo2 <- sum(log(inla_runs[[2]]$model$cpo$cpo), na.rm = TRUE)
-cpo3 <- sum(log(inla_runs[[3]]$model$cpo$cpo), na.rm = TRUE)
-
+cpo <- log(inla_runs[[1]]$model$cpo$cpo)
+cpo <- cpo[is.finite(cpo)]
+cpo1 <- sum(cpo, na.rm = TRUE)
+cpo <- log(inla_runs[[2]]$model$cpo$cpo)
+cpo <- cpo[is.finite(cpo)]
+cpo2 <- sum(cpo, na.rm = TRUE)
+cpo <- log(inla_runs[[3]]$model$cpo$cpo)
+cpo <- cpo[is.finite(cpo)]
+cpo3 <- sum(cpo, na.rm = TRUE)
+cpo <- log(inla_runs[[4]]$model$cpo$cpo)
+cpo <- cpo[is.finite(cpo)]
+cpo4 <- sum(cpo, na.rm = TRUE)
 
 #### Spatial random effect plots ----------------
 
@@ -134,15 +145,16 @@ if(!exists("msoa")){
     filter(MSOA11CD %in% unique(london_df$areaCode))
 }
 
-plot_spatial_random_effect(inla_runs[[4]]$model, msoa, "new_id")
+plot_spatial_random_effect(inla_runs[[1]]$model, msoa, "new_id")
 plot_spatial_random_effect(inla_runs[[2]]$model, msoa, "new_id")
 plot_spatial_random_effect(inla_runs[[3]]$model, msoa, "new_id")
+plot_spatial_random_effect(inla_runs[[4]]$model, msoa, "new_id")
 
 #### Temporal random effect plots ----------------
 plot_temporal_random_effect(inla_runs[[1]]$model, "week")
 plot_temporal_random_effect(inla_runs[[2]]$model, "week")
 plot_temporal_random_effect(inla_runs[[3]]$model, "week")
-
+plot_temporal_random_effect(inla_runs[[4]]$model, "week")
 
 #### Observed Vs Fitted caserates Temporal ----------
 areas <- selected_area_code(london_df, 5)
@@ -150,8 +162,9 @@ lapply(areas, comparision_plot_temporal)
 
 
 #### Observed Vs Fitted caserates Spatial -----------
+selected_dates = c("2020-11-09", "2020-03-30", "2020-12-21", "2020-08-24")
+lapply(selected_dates, comparision_plot_spatial)
 
-comparision_plot_spatial("2020-11-09", 10)
 
 
 

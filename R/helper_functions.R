@@ -63,7 +63,7 @@ plot_temporal_random_effect <- function(model, id_col){
 #### Observed Vs Predicted Temporal plots ----------------------
 comparision_plot_temporal <- function(areaCode){
   ###plot the results
-  model <- inla_runs[[3]]
+  model <- inla_runs[[4]]
   model$result$week <- as.Date(model$result$week)
   plot <- ggplot(filter(model$result, msoa == areaCode), aes(x=week, y=mean, group=1))+
     geom_line(col = "blue")+
@@ -76,14 +76,15 @@ comparision_plot_temporal <- function(areaCode){
           axis.text=element_text(size=12),
           axis.title=element_text(size=14,face="bold"))+
     scale_x_date(date_breaks = "2 month")
+  ggsave(filename = paste0("England/plots/temporal_observed_fitted", toString(areaCode), ".png"), plot, dpi = 200)
   return(plot)
 }
 
 
 #### Observed Vs Predicted Spatial Plots ------------------------
-comparision_plot_spatial <- function(date, breaks){
+comparision_plot_spatial <- function(date, breaks = 10){
   library(classInt)  # For natural breaks
-  model <- inla_runs[[3]]
+  model <- inla_runs[[4]]
   model$result |> 
     left_join(msoa, by=c("msoa"="MSOA11CD")) |> 
     st_as_sf() -> 
@@ -112,7 +113,7 @@ comparision_plot_spatial <- function(date, breaks){
       axis.text = element_blank(),
       axis.title = element_blank()
     )
-  
+  ggsave(filename = paste0("England/plots/spatial_plot_observed_fitted", toString(date), ".png"), combined_plot, dpi = 200)
   return(combined_plot)
 }
 

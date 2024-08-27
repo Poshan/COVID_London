@@ -6,7 +6,7 @@ library(lubridate)
 library(flexplot)
 # 
 london_df <- read_parquet("England/data/processed_data/london_weekly_data_with_caserate.parquet")
-
+london_df <- read_parquet("England/data/processed_data/london_df_mobilitylaggedactivity.parquet")
 
 ## Temporal plots -------------------------------------------------------------
 ### Calculate overall weekly mean caserate ----------------------------------
@@ -71,6 +71,101 @@ p2<-ggplot(london_df, aes(x = date, y = weekly_mean_activity, group = areaCode, 
   annotate("text", x = as.Date("2020-11-05"), y =  max(london_df$weekly_mean_activity)*0.9, label = "Lockdown 2", hjust = -0.1)
 
 ggsave("England/plots/temporal_series_activity.png", plot = p2, width = 10, height = 6, dpi = 300)
+
+## Correlation between caserate and variables of interest for all areaCode for each week ---------------
+
+london_df |> 
+  group_by(date) |> 
+  summarise(cor = cor(caserate, weekly_mean_activity),
+            cor_moblag = cor(caserate, MobilityLag)) -> 
+  correlation_temporal_df
+
+
+correlation_temporal_df_long <- correlation_temporal_df |>
+  pivot_longer(
+    cols = starts_with("cor"), 
+    names_to = "correlation_type", 
+    values_to = "correlation"
+  )
+
+# Plot all correlations
+p3<-ggplot(correlation_temporal_df_long, aes(x = date, y = correlation, color = correlation_type)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(title = "Temporal Changes in Correlation between caserate and activity",
+       x = "Date",
+       y = "Correlation",
+       color = "Correlation Type") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+ggsave("England/plots/correlation_evolution.png", p3)
+
+
+## Correlation between the caserate and the variables for all weeks for each areaCode ----------
+london_df |> 
+  group_by(areaCode) |> 
+  summarise(cor = cor(caserate, weekly_mean_activity),
+            cor_weeklag1 = cor(caserate, weekly_mean_activity_lag1),
+            cor_moblag = cor(caserate, MobilityLag)) -> 
+  correlation_spatial_df
+
+
+library(sf)
+read_sf('England/data/Boundary/MSOA_2011_London_gen_MHW.shp') |> 
+  st_transform('OGC:CRS84') |> 
+  filter(MSOA11CD %in% unique(london_df$areaCode)) -> 
+  msoa 
+
+correlation_spatial_df |> 
+  left_join(msoa, by = c("areaCode" = "MSOA11CD")) |> 
+  st_as_sf() ->
+  correlation_spatial_df.sf
+
+
+p4<-ggplot(correlation_spatial_df.sf) +
+  geom_sf(aes(fill = cor), linewidth=0.0001, alpha=0.9) + 
+  scale_fill_viridis_c(
+    # trans = "sqrt",
+    # breaks=c(0, 100, 200, 500, 1700),
+    # name = "caserate"
+  )+
+  ##facet_wrap(~ date, ncol = 3) +  # Arrange plots in a grid of 5 columns
+  labs(title = "Spatial variation of correlation between caserate and activity") +
+  theme_minimal() +
+  theme(legend.position.inside = c(0.5, 0),
+        axis.text = element_blank(),  # Remove axis text for better visualization
+        axis.title = element_blank())
+
+p5<-ggplot(correlation_spatial_df.sf) +
+  geom_sf(aes(fill = cor_weeklag1), linewidth=0.0001, alpha=0.9) + 
+  scale_fill_viridis_c(
+    # trans = "sqrt",
+    # breaks=c(0, 100, 200, 500, 1700),
+    # name = "caserate"
+  )+
+  ##facet_wrap(~ date, ncol = 3) +  # Arrange plots in a grid of 5 columns
+  labs(title = "Spatial variation of correlation between caserate and activity") +
+  theme_minimal() +
+  theme(legend.position.inside = c(0.5, 0),
+        axis.text = element_blank(),  # Remove axis text for better visualization
+        axis.title = element_blank())
+
+
+p6<-ggplot(correlation_spatial_df.sf) +
+  geom_sf(aes(fill = cor_moblag), linewidth=0.0001, alpha=0.9) + 
+  scale_fill_viridis_c(
+    # trans = "sqrt",
+    # breaks=c(0, 100, 200, 500, 1700),
+    # name = "caserate"
+  )+
+  ##facet_wrap(~ date, ncol = 3) +  # Arrange plots in a grid of 5 columns
+  labs(title = "Spatial variation of correlation between caserate and activity") +
+  theme_minimal() +
+  theme(legend.position.inside = c(0.5, 0),
+        axis.text = element_blank(),  # Remove axis text for better visualization
+        axis.title = element_blank())
 
 
 ## Identify regions with extreme cases -----------------------------------------
@@ -139,6 +234,34 @@ plots <- plot_caserate_activity_spatial(date_from, date_upto)
 ggsave("England/plots/VR_caserate.png", plots$caserate_plot)
 ggsave("England/plots/VR_activity.png", plots$activity_plot)
 
+threshold <- quantile(london_df$weekly_mean_activity, 0.95, na.rm = T)
+p1<-ggplot(filter(london_df, (weekly_mean_activity <= threshold & date > date_from & date < date_upto))) +
+  geom_sf(aes(fill = weekly_mean_activity), linewidth=0.0001, alpha=0.9) + 
+  scale_fill_viridis_c(
+    # trans = "sqrt",
+    # breaks=c(0, 100, 200, 500, 1700),
+    # name = "caserate"
+  )+
+  facet_wrap(~ date, ncol = 3) +  # Arrange plots in a grid of 5 columns
+  labs(title = "mean activity") +
+  theme_minimal() +
+  theme(legend.position.inside = c(0.5, 0),
+        axis.text = element_blank(),  # Remove axis text for better visualization
+        axis.title = element_blank()) 
+
+p2 <-ggplot(subset(london_df, date > date_from & date < date_upto)) +
+  geom_sf(aes(fill = caserate), linewidth=0.0001, alpha=0.9) + 
+  scale_fill_viridis_c(
+    # trans = "sqrt",
+    # breaks=c(0, 100, 200, 500, 1700),
+    # name = "caserate"
+  )+
+  facet_wrap(~ date, ncol = 3) +  # Arrange plots in a grid of 5 columns
+  labs(title = "caserate") +
+  theme_minimal() +
+  theme(legend.position.inside = c(0.5, 0),
+        axis.text = element_blank(),  # Remove axis text for better visualization
+        axis.title = element_blank())   # Remove axis titles
 
 ## flexplot --------------------------------------------------------------------
 london_df |> 

@@ -83,5 +83,7 @@ The code are structured in the way below:
 
 `08_Modelling_INLA_models.R` models based on the prepared data and graphs using R-INLA packages and plots the summary results.
 
+## Model Results
+See [summaries here](model_summaries.md). 
 
 ## Libraries used

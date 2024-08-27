@@ -2,75 +2,105 @@
 
 ## Models fitting comparision
 
-| Model no. | Model 1 | Model 2 | Model 3 |
+| Model no. | Model 1 | Model 2 | Model 3 | Model 4 |
 | -------- | -------- | -------- | ------- |
-| formula     | as.integer(caserate) ~ 1 +  f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)     | as.integer(caserate) ~ 1 + weekly_mean_activity + f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)      |    as.integer(caserate) ~ 1+ weekly_mean_activity +     MobilityLag + f(week, model = "rw2", constr = TRUE) + f(new_id, model="bym2", graph = msoa.graph)     |
-| WAIC | 361854.22 | 361722.03 | 361681.89 |
-| CPO     | -193293.4     | -193003    | -192915.8 |
-| -------- | -------- | -------- | ------- |
-| R2 | 0.93 | 0.93 | 0.93 |
-| RMSE     | 41.69     | 41.69     |   41.66  |
-| -------- | -------- | -------- | ------- |
-| Precision for week | (11.729 to 28.756 ) | (11.696 to 28.671) |(11.614 to 28.505)|
-| Precision for area    | (7.436 to 9.798) | (7.002 to 9.220) | (6.217 to 8.255)|
-| Phi for area | (0.608 to 0.805) | (0.633 to 0.822) | (0.621 to 0.815) |
-| -------- | -------- | -------- | ------- |
-| Intercept| (-4.936 to -4.91) | (-5.125 to -5.084) |(-5.150 to -5.107)|
-| Activity Within | XX | (0.762 to 0.909) |(0.645 to 0.802)|
-| Activity lagged by mobility | XX     | XX     |  (0.388 to 0.647) |
+| formula     | as.integer(caserate) ~ 1 +  f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)     | as.integer(caserate) ~ 1 + weekly_mean_activity + f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)      |    as.integer(caserate) ~ 1+ weekly_mean_activity +     MobilityLag + f(week, model = "rw2", constr = TRUE) + f(new_id, model="bym2", graph = msoa.graph)     |as.integer(caserate) ~ 1+ weekly_mean_activity +
+                                  MobilityLag +
+                                  weekly_mean_activity_lag1 +
+                                  weekly_mean_activity_lag2 +
+                                  MobilityLag_weeklag_1 +
+                                  MobilityLag_weeklag_2 +
+                                  f(week, model = "rw2", constr = TRUE) +
+                                  f(new_id, model="bym2", graph = msoa.graph) |
+| WAIC | 1400435.92 | 1400562.41 | 1400029.36 | 1399839.40 |
+| CPO     | -1122138     | -1122081   | -1121999 | -1121268 |
+| -------- | -------- | -------- | ------- |  ------- |
+| R2 | 0.73 | 0.73 | 0.73 | 0.73 |
+| RMSE     | 84.15     | 84.15     |   84  | 84 |
+| -------- | -------- | -------- | ------- | ------- |
+| Precision for week | (2.45 to 5.9 ) | (2.44 to 5.89) |(2.4 to 5.86)| 2.54 to 6.1 |
+| Precision for area    | (5.2 to 6.82) | (5.24 to 6.88) | (2.96 to 3.9)| 2.76 to 3.67 |
+| Phi for area | (0.45 to 0.69) | (0.442 to 0.681) | (0.4 to 0.65) | 0.45 to 0.69 |
+| -------- | -------- | -------- | ------- |  ------- |
+| Intercept| (-6.66 to -6.64) | (-6.65 to -6.60) |(-6.78 to -6.72)| (-7.033 to -6.96) |
+| Activity Within | XX | (-0.214 to -0.070) |(-0.8 to -0.64)| (-1.63 to -1.44) |
+| Activity lagged by mobility | XX     | XX     |  (2.48 to 2.77) | (3.13 to 3.52) |
+| Activity lagged by mobility and 1 week | XX     | XX     |  XX | (-1.27 to -0.88) |
 
+
+
+| Model | 
+|Formula|
+|WAIC|
+|CPO| 
+| -------- | -------- |
+|R2| 0.73|
+|RMSE|84 |
+| -------- | -------- |
 
 
 ## Residuals in models
 ### Model 1
+![](plots/residue_model1.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/4ae8143e-ee29-4b8e-b642-5f56a953ab2e.png)
 
 
 ### Model 2
-![](https://radosgw.public.os.wwu.de/pad/uploads/719216ff-c072-47bb-8854-c0c86fedc433.png)
+![](plots/residue_model2.png)
 
 
 ### Model 3
-![](https://radosgw.public.os.wwu.de/pad/uploads/7bb19e68-c561-42af-ade9-a9287f7c0b48.png)
+![](plots/residue_model3.png)
+
+
+### Model 4
+![](plots/residue_model4.png)
 
 
 
 ## Spatial Random effect plots
 ### Model 1
-![](https://radosgw.public.os.wwu.de/pad/uploads/ad72d479-1c1c-45aa-a191-c21060f0d5c6.png)
+![](plots/re_spatial_m1.png)
 
 ### Model 2
-![](https://radosgw.public.os.wwu.de/pad/uploads/4af9e21a-53cb-4661-a819-608e2b6ffacb.png)
+![](plots/re_spatial_m2.png)
 
 ### Model 3
-![](https://radosgw.public.os.wwu.de/pad/uploads/24050158-37f5-4237-a72e-2298865e4d4d.png)
+![](plots/re_spatial_m3.png)
+
+### Model 4
+![](plots/re_spatial_m4.png)
 
 ## Temporal Random effect plots 
 ### Model 1
-![](https://radosgw.public.os.wwu.de/pad/uploads/0b5b2c65-583f-483f-8d40-31ac53924ee5.png)
+![](plots/re_temporal_m1.png)
 
 ### Model 2
-![](https://radosgw.public.os.wwu.de/pad/uploads/5c95eaa0-4933-432b-a5e5-7fb0cb084eab.png)
+![](plots/re_temporal_m2.png)
 
 ### Model 3
-![](https://radosgw.public.os.wwu.de/pad/uploads/3fa65b7b-112d-4d97-b833-0128eafaad37.png)
+![](plots/re_temporal_m3.png)
+
+### Model 4
+![](plots/re_temporal_m4.png)
 
 
 ## Observed vs Fitted caserate
 ### Temporal plot of selected areas
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/97af3b8e-c121-4f84-b885-b4280dba578b.png)
+![](plots/temporal_observed_fittedE02000491.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/e8ab7b8f-c0d7-4ffb-96e4-87b0703c207f.png)
+![](plots/temporal_observed_fittedE02000176.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/4056a8c9-4844-436e-9abf-518f3332f742.png)
+![](plots/temporal_observed_fittedE02000786.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/af243bae-1e41-4aad-8458-b22ae592b38d.png)
+![](plots/temporal_observed_fittedE02000776.png)
 
 ### Spatial plots for selected dates
-![](https://radosgw.public.os.wwu.de/pad/uploads/7763819f-ae83-42c4-b763-e38826bf5621.png)
+![](plots/spatial_plot_observed_fitted2020-03-30.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/d2937f1d-17ad-4f6c-9a8d-464f9a58a47b.png)
+![](plots/spatial_plot_observed_fitted2020-08-24.png)
 
-![](https://radosgw.public.os.wwu.de/pad/uploads/7a26ebb5-4d35-461c-9189-a20fdf49f284.png)
+![](plots/spatial_plot_observed_fitted2020-11-09.png)
+
+![](plots/spatial_plot_observed_fitted2020-12-21.png)
