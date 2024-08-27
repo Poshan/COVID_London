@@ -3,15 +3,8 @@
 ## Models fitting comparision
 
 | Model no. | Model 1 | Model 2 | Model 3 | Model 4 |
-| -------- | -------- | -------- | ------- |
-| formula     | as.integer(caserate) ~ 1 +  f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)     | as.integer(caserate) ~ 1 + weekly_mean_activity + f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)      |    as.integer(caserate) ~ 1+ weekly_mean_activity +     MobilityLag + f(week, model = "rw2", constr = TRUE) + f(new_id, model="bym2", graph = msoa.graph)     |as.integer(caserate) ~ 1+ weekly_mean_activity +
-                                  MobilityLag +
-                                  weekly_mean_activity_lag1 +
-                                  weekly_mean_activity_lag2 +
-                                  MobilityLag_weeklag_1 +
-                                  MobilityLag_weeklag_2 +
-                                  f(week, model = "rw2", constr = TRUE) +
-                                  f(new_id, model="bym2", graph = msoa.graph) |
+| -------- | -------- | -------- | ------- | ------- |
+| formula     | as.integer(caserate) ~ 1 +  f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)     | as.integer(caserate) ~ 1 + weekly_mean_activity + f(week, model = "rw2", constr = TRUE) +  f(new_id, model="bym2", graph = msoa.graph)      |    as.integer(caserate) ~ 1+ weekly_mean_activity +     MobilityLag + f(week, model = "rw2", constr = TRUE) + f(new_id, model="bym2", graph = msoa.graph)  |as.integer(caserate) ~ 1+ weekly_mean_activity + MobilityLag +weekly_mean_activity_lag1 +weekly_mean_activity_lag2 +MobilityLag_weeklag_1 + MobilityLag_weeklag_2 +f(week, model = "rw2", constr = TRUE) + f(new_id, model="bym2", graph = msoa.graph) |
 | WAIC | 1400435.92 | 1400562.41 | 1400029.36 | 1399839.40 |
 | CPO     | -1122138     | -1122081   | -1121999 | -1121268 |
 | -------- | -------- | -------- | ------- |  ------- |
@@ -27,16 +20,6 @@
 | Activity lagged by mobility | XX     | XX     |  (2.48 to 2.77) | (3.13 to 3.52) |
 | Activity lagged by mobility and 1 week | XX     | XX     |  XX | (-1.27 to -0.88) |
 
-
-
-| Model | 
-|Formula|
-|WAIC|
-|CPO| 
-| -------- | -------- |
-|R2| 0.73|
-|RMSE|84 |
-| -------- | -------- |
 
 
 ## Residuals in models
