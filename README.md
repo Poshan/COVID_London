@@ -7,83 +7,200 @@ This project deals with spatio-temporal modelling the weekly COVID-19 cases in M
 We have applied the daily movement/activity data from Mapbox, which is calculated by aggregating anonymized location data from mobile devices by day by geographic tiles of approximately 100-meter resolution. It provides measures of relative human activity (walking, driving, etc) over both space and time, presented as an activity index. More details of the datasets can be seen [here](https://docs.mapbox.com/data/movement/guides/)
 
 
-## Data
+# Spatiotemporal Analysis of COVID-19 Spread and Human Mobility in London
 
-**Boundary:** 
+## Overview
 
-`MSOA_2011_London_gen_MHW.shp` are the boudaries of 983 MSOAs in Greater London Area. 
+This repository contains the R code for analyzing the relationship between human mobility patterns and COVID-19 incidence rates in London during 2020. The analysis uses Bayesian spatiotemporal models implemented in R-INLA to understand how movement patterns influenced disease spread across Middle Super Output Areas (MSOAs).
 
-**COVID_19_dataset:** 
+## Project Structure
 
-`cases2020.csv` is the data are obtained from [UKHSA dashboard](https://ukhsa-dashboard.data.gov.uk/covid-19-archive-data-download), we used weekly cases per MSOAs from the year 2020. 
-There were missing datasets for the City of London (MSOA code: E02000001), So it was added from archives of the UKHSA dashboard and a csv manually created `cases2020_E02000001.csv`
-
-**OD_matrix_COVID:**
-
-`ons-des-prod-mobility-outenc-ingress_encrypt_estODMatrix_msoa_MidPandemic_df.csv` is the origin destination matrix showing the number of commutes between the MSOAs during the COVID-19 period. The source of datasets is the [Office of National Statistics, UK](https://www.ons.gov.uk/releases/estimationoftraveltoworkmatricesenglandandwales)
-
-**other_data:**
-
-`population_centers_london.shp` is the shapefile containing the residential places and their population. **not used in this analysis**
-
-`population_estimate_2020.csv` is the estimated population of MSOAs prepared by [Office of national statistics](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/middlesuperoutputareamidyearpopulationestimates) 
-
-
-**processed_data:**
-
-This folder contains the pre-processed datasets.
-
-`1000m_grids.shp` is the 1000m by 1000m grids for the Greater London area. **not used in this analysis**
-
-`activity_in_1000m_grids.parquet` is the aggregated (mean) from the mapbox activity data upscaled to 1000m grids **not used in this analysis**
-
-
-`distinct_LONLAT.parquet` is a dataframe containing all the distinct locations where the mapbox activity data are availalble in the study area during the year 2020. See [Preprocessing](R/01_Preprocessing_Duplicate_removal.R)
-
-`london_df_mobilitylaggedactivity.parquet` is created when the origin destination matrix (explained above) is combined with the mean activity within MSOAs. See [R code creating mobility factor](R/07_Modelling_create_MobilityFactor.R). This dataframe is used in the models, so the data description is shown below:
-
-- *areaCode*: unique ID of each MSOA
-- *date*: weekly dates
-- *weekly_mean_activity*: aggregated mean activity for the week 
-- *week*: week number 
-- *weekly_cases*: weekly COVID-19 cases reported
-- *caserate*: weekly_cases per 100000 population in the MSOA
-- *Population*: population estimate of the MSOA for the year 2020
-- *wave*: COVID-19 waves and its events (depicting the decisions made during the period)
-- *weekly_mean_activity_lag1*: *weekly_mean_activity* one week prior
-- *weekly_mean_activity_lag2*: *weekly_mean_activity* two weeks prior
-- *MobilityLag*: *weekly_mean_activity* which is combined with the neighbors and their weights from the OD matrices
-- *MobilityLag_weeklag_1*: *weekly_mean_activity_lag1* combined with the neighbors and their weights from the OD matrices
-- *MobilityLag_weeklag_2*: *weekly_mean_activity_lag2* combined with the neighbors and their weights from the OD matrices
+```
+├── 01_preprocessing/           # Data preprocessing scripts
+│   ├── 01_duplicate_removal.R  # Remove duplicates from raw mobility data
+│   ├── 02_spatial_aggregation.R # Aggregate data to MSOA level
+│   ├── 03_covid_data_prep.R    # Process COVID-19 case data
+│   ├── 04_od_matrix_prep.R     # Process Origin-Destination matrices
+│
+├── 02_modeling/                # Core modeling scripts
+│   ├── create_graph.R          # Create spatial neighborhood graphs
+│   ├── create_indicators.R     # Create activity and mobility indicators
+│   ├── helper_functions.R      # Utility functions for modeling
+|
+│
+├── 03_analysis/                # Analysis and visualization
+│   └── exploratory_analysis.R  # Create plots for publication
+│
+├── data/                      # Data directory 
+│   ├──Boundary: are the boudaries of 983 MSOAs in Greater London Area. 
+│   ├──COVID_19_dataset: data are obtained from [UKHSA dashboard](https://ukhsa-dashboard.data.gov.uk/covid-19-archive-data-download), we used weekly cases per MSOAs from the year 2020. 
+│   ├──mobility_data: preprocessed mapbox activitydata
+│   ├──OD_matrix_COVID:origin destination matrix showing the number of commutes between the MSOAs during the COVID-19 period. The source of datasets is the [Office of National Statistics, UK](https://www.ons.gov.uk/releases/estimationoftraveltoworkmatricesenglandandwales)
+│   ├──other_data: estimated population of MSOAs prepared by [Office of national statistics](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/middlesuperoutputareamidyearpopulationestimates) 
+│   ├──processed_data: 
+│   
+└── model_run.Rmd              # Main model implementation
+```
 
 
-`origin_destination_matrix.parquet` is the processed origin destination matrix dataset (explained above). See [Preprocessing of OD matrices](R/04_Preprocessing_OD_matrices.R)
+## Dependencies
 
-`pre_processed_movement.parquet` is the pre-processed activity data created from the activity data provided by mapbox. See [Preprocessing of activity data](R/01_Preprocessing_Duplicate_removal.R), this step mainly involves duplicate averaging.
+### Required R Packages
 
-`weekly_mean_by_msoa.parquet` is the aggregated activity data created from the activity datasets. The aggregation is spatially at the level of MSOAs and weekly. See [Aggregation](R/02_Preprocessing_Aggregation.R) 
+```r
+# Core packages
+library(sf)          # Spatial data handling
+library(dplyr)       # Data manipulation
+library(tidyr)       # Data tidying
+library(arrow)       # Parquet file support
+library(lubridate)   # Date handling
 
-## Code
-The code are structured in the way below:
+# Spatial analysis
+library(spdep)       # Spatial dependence
+library(INLA)        # Bayesian inference
 
-`01_Preprocessing_Duplicate_removal.R` reads the raw activity datasets (**not included here due to its large size**), identifies the duplicated datasets in the same grids,  averages them and saves as [pre_processed_movement.parquet](data/processed_data/pre_processed_movement.parquet)
+# Visualization
+library(ggplot2)     # Plotting
+library(viridis)     # Color scales
+library(patchwork)   # Combine plots
 
-`02_Preprocessing_Aggregation.R` reads the pre-processed movement data and aggregates them into the level of MSOAs spatially as well as weekly and saves them as [weekly_mean_by_msoa.parquet](data/processed_data/weekly_mean_by_msoa.parquet). This R file also includes an experimental code where the activity data is aggregated into other grid sizes (for example 1000m)
+# Additional
+library(fuzzyjoin)   # Fuzzy matching for time periods
+library(Matrix)      # Sparse matrices
+library(classInt)    # Classification intervals
+```
 
-`03_Preprocessing_Covid_data.R` reads the COVID-19 cases datasets, population estimates, aggregated activity data combines them to form to a single dataset.
+<!-- ## Data Requirements
+
+### Input Data
+
+1. **Mobility Data**: Activity indices from Mapbox Movement dataset
+   - Format: CSV with columns: `XLON`, `XLAT`, `AGG_DAY_PERIOD`, `ACTIVITY_INDEX_TOTAL`
+   - Temporal coverage: January-December 2020
+   - Spatial coverage: Greater London
+
+2. **COVID-19 Data**: Weekly case counts by MSOA
+   - Sources: UK Health Security Agency
+
+3. **Boundary Data**: MSOA and LAD shapefiles
+   - MSOA 2011 boundaries for London
+   - Local Authority District boundaries
+
+4. **Origin-Destination Matrices**: Travel patterns during COVID-19
+   - Source: ONS travel-to-work estimates
+
+5. **Population Data**: Mid-year population estimates 2020
+   - Source: ONS population estimates by MSOA -->
+
+## Workflow
+
+### Step 1: Data Preprocessing
+
+Run preprocessing scripts in order:
+
+```r
+
+# Run preprocessing pipeline
+source("01_preprocessing/01_duplicate_removal.R")
+source("01_preprocessing/02_spatial_aggregation.R") 
+source("01_preprocessing/03_covid_data_prep.R")
+source("01_preprocessing/04_od_matrix_prep.R")
+```
+
+### Step 2: Model Setup
+
+Create spatial graphs and prepare data:
+
+```r
+source("02_Modelling/create_graph.R")
+source("02_Modelling/create_indicators.R")
+source("02_Modelling/helper_functions.R")
+```
+
+### Step 3: Run Models
+
+Execute the main model in [RMarkdown](/model_run.Rmd):
+
+```r
+rmarkdown::render("model_run.Rmd")
+```
+
+### Step 4: Generate Visualizations
+
+Create publication figures:
+
+```r
+source("03_analysis/exploratory_analysis.R")
+```
+
+<!-- ## Key Features
+
+### Spatial Components
+
+- **Contiguity-based graphs**: Queen contiguity for MSOA neighbors
+- **Mobility-based graphs**: Weighted by Origin-Destination flows
+- **Multi-level structure**: MSOA nested within LAD for hierarchical effects
+
+### Temporal Components
+
+- Weekly aggregation of daily mobility data
+- COVID-19 waves identified and labeled
+- Temporal random effects with AR(1) structure
+
+### Model Specifications
+
+- **Family**: Extended Poisson (xPoisson) for overdispersion
+- **Offset**: Log population scaled to per 100,000
+- **Random Effects**:
+  - BYM2 spatial model (structured + unstructured)
+  - RW1 temporal trend
+  - Type III space-time interaction
+
+### Visualization Outputs
+
+- Temporal trends of cases and mobility
+- Spatial distribution maps
+- Model diagnostics and validation plots
+- Observed vs fitted comparisons
 
 
-`04_Preprocessing_OD_matrices.R` reads the origin destination matrix, changes the MSOAs codes by serial numbers in the datasets, adds a new column named origin and saves as [origin_destination_matrix.parquet](data/processed_data/origin_destination_matrix.parquet) 
+## Output Files
 
-`05_Exploratory_analysis.R` prepares various exploratory charts and maps
+- `processed_activity.parquet`: Weekly aggregated mobility
+- `processed_data_with_covid_cases.parquet`: Combined dataset
+- `origin_destination_matrix.parquet`: Processed OD matrix
+- `df_lagged.parquet`: Dataset with spatial lag indicators -->
 
-`06_Modelling_create_graph.R` creates the graph based on geography and the graph based on OD-matrices
+## Model Diagnostics
 
-`07_Modelling_create_MobilityFactor.R` combines the graph created from the origin destination matrix and the aggregated activities in the MSOAs to create a mobility factor and saves the dataframe as [london_df_mobilitylaggedactivity.parquet](data/processed_data/london_df_mobilitylaggedactivity.parquet)
+The analysis includes several diagnostic measuress:
 
-`08_Modelling_INLA_models.R` models based on the prepared data and graphs using R-INLA packages and plots the summary results.
+- **CPO** (Conditional Predictive Ordinate): Model fit assessment
+- **WAIC** (Watanabe-Akaike Information Criterion): Model comparison
+- **R²**: Variance explained
 
-## Model Results
-See [summaries here](model_summaries.md). 
+## Reproducibility
 
-## Libraries used
+To ensure reproducibility:
+
+1. Use R version 4.0+ with specified package versions
+2. Maintain directory structure as outlined
+3. Process data in sequential order
+
+
+
+## Citation
+
+<!-- If you use this code, please cite:
+
+```
+[Your Paper Citation Here]
+``` -->
+
+
+## Acknowledgments
+
+- Mapbox for mobility data
+- UK Health Security Agency for COVID-19 surveillance data
+- Office for National Statistics for population and boundary data
+- R-INLA development team for the modeling framework
