@@ -3,10 +3,10 @@ name: Render and Deploy R Markdown to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change to your default branch if different (e.g., master)
+      - master 
   pull_request:
     branches:
-      - main
+      - master
   workflow_dispatch:  # Allows manual triggering from Actions tab
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

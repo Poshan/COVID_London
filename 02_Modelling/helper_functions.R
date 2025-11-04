@@ -402,9 +402,14 @@ select_extreme_areas <- function(data, n = 10) {
     all = c(top_n_highest, top_n_lowest)
   ))
 }
-
-
-
+library(arrow)
+library(sf)
+london_df <- read_parquet("data/processed_data/processed_data_with_covid_cases.parquet")
+msoa <- read_sf('data/Boundary/MSOA_2011_London_gen_MHW.shp') |> 
+  st_transform('OGC:CRS84') |> 
+  filter(MSOA11CD %in% unique(london_df$areaCode))
+## create lookup df to name the MSOAs
+lookup_df <- msoa |> st_drop_geometry() |> select(MSOA11CD, MSOA11NM)
 #' Get MSOA name from code
 #' 
 #' @param area_code MSOA code

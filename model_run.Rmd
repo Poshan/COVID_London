@@ -53,9 +53,7 @@ df <- read_parquet("data/processed_data/lagged/df_lagged.parquet")
 df$spatial_lag <- as.vector(df$spatial_lag)
 df$MobilityLag <- as.vector(df$MobilityLag)
 # df <- df |> filter(date < "2020-12-23")
-## create lookup df to name the MSOAs
 lookup_df <- msoa |> st_drop_geometry() |> select(MSOA11CD, MSOA11NM)
-
 ```
 
 # Model Specification
@@ -515,7 +513,7 @@ comparision_plot_temporal_single <- function(areaCode, model){
     geom_line(aes(x=week, y= obs), col="red", size = 0.8)+
     geom_ribbon(aes(ymin=`0.025quant`, ymax=`0.975quant`), alpha=0.3, fill="blue") +
     labs(x = "Date", y = "Weekly incidence/100,000") +
-    ggtitle(get_area_name(areaCode)) +
+    ggtitle(areaCode) +
     theme_minimal()+
     theme(legend.position = "none",
           axis.text = element_text(size = 10),
@@ -542,7 +540,7 @@ p4 <- comparision_plot_temporal_single(selected_areas[4], model_od)
 
 # Combine into 2x2 grid with caption
 combined_plot <- arrangeGrob(p1, p2, p3, p4, ncol=2)
-
+combined_plot
 # Save
 # #ggsave("plots/temporal_observed_fitted_combined.png", 
 #        combined_plot, 
