@@ -84,9 +84,12 @@ jobs:
             "tidyr",
             "sf",
             "gridExtra",
-            "grid",
+            "spdep",
+            "Matrix",
+            "scales",
             "classInt",
-            "viridis"
+            "viridis",
+            "patchwork"
           ), dependencies = TRUE)
         shell: Rscript {0}
       
